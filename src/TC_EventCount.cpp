@@ -33,7 +33,7 @@
 * -------------------------------------------------------------------------------------- */
 
 
-#include "TC_EventCount.h"
+#include "EventCount_Config/TC_EventCount.h"
 
 //Change these to adjust epoch time and sleep time
 volatile uint32_t epochTime = 1513548581;
