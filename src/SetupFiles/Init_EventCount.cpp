@@ -3,7 +3,7 @@
 //clock Definitions
 enum GCLK_IDs {
 
-//* means its being used by Arduino core 
+// '*' means its set up by Arduino core 
 // Can get rid of one of the 1ms clocks
 
    GCLK0,   //48MHz  DFLL     (CPU Clock)*
@@ -16,6 +16,20 @@ enum GCLK_IDs {
    GCLK7,
 
 };
+
+
+void init_EventCount(SodaqRTC rtc)
+{
+//All Set up funcitons called from here
+
+   init_GCLK();                             
+   init_EIC();
+   init_EVSYS();
+   init_TC();
+   init_RTC(rtc);
+}
+
+
 
 void init_GCLK()
 {   
@@ -69,14 +83,11 @@ void init_GCLK()
 
 void init_RTC(SodaqRTC rtc)
 {
-
-   
    rtc.begin();
    RTC->MODE2.CLOCK.reg = 0;
    RTC->MODE2.Mode2Alarm[0].ALARM.reg = sleepTime;
    rtc.enableAlarm(rtc.MATCH_HHMMSS);
    rtc.attachInterrupt(RTC_ISR);
-
 }
 
 
@@ -87,60 +98,6 @@ void init_EIC()
 
    EIC->CTRL.bit.ENABLE = disable;           //Disable to allow for some register writes
    while(EICisSyncing);
-
-/*
-*  Soemthing in the GPIO/EIC setup code is causing this to break.
-*  When it breaks it hangs w/cortex handler inf loop.
-*
-*
-   NVIC_DisableIRQ(EIC_IRQn);
-   NVIC_ClearPendingIRQ(EIC_IRQn);
-   NVIC_SetPriority(EIC_IRQn, 0);
-   NVIC_EnableIRQ(EIC_IRQn);
-
-   GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID(GCM_EIC));
-   EIC->CTRL.bit.ENABLE = enable;
-   while(EICisSyncing);
-
-   EIC->WAKEUP.reg |= EIC_WAKEUP_WAKEUPEN6 | EIC_WAKEUP_WAKEUPEN8 | EIC_WAKEUP_WAKEUPEN9;
-
-
-   //Configure Pins
-   PORT->Group[1].PINCFG[8].reg =  PORT_PINCFG_INEN |   //Input Enable
-                                       PORT_PINCFG_PULLEN;  //Pull Resistor
-
-   PORT->Group[1].PINCFG[9].reg =  PORT_PINCFG_INEN |   //Input Enable
-                                       PORT_PINCFG_PULLEN;  //Pull Resistor
-
-   PORT->Group[0].PINCFG[6].reg =  PORT_PINCFG_INEN |   //Input Enable
-                                       PORT_PINCFG_PULLEN;  //Pull Resistor
-
-   PORT->Group[0].DIRCLR.reg = PORTA6;
-   PORT->Group[1].DIRCLR.reg = PORTB8 | PORTB9;
-   PORT->Group[0].OUTCLR.reg = PORTA6;
-   PORT->Group[1].OUTCLR.reg = PORTB8 | PORTB9;
-
-   //Assign Pins A1,A2,A3 to EXTINT8,EXTINT9,EXTINT6.
-   PORT->Group[1].PMUX[8].bit.PMUXO = PORT_PMUX_PMUXE(0);
-   PORT->Group[1].PINCFG[8].reg |= PORT_PINCFG_PMUXEN;   //PMUX on
-
-   PORT->Group[1].PMUX[9].bit.PMUXE = PORT_PMUX_PMUXO(0);
-   PORT->Group[1].PINCFG[9].reg |= PORT_PINCFG_PMUXEN;   //PMUX on
-
-   PORT->Group[0].PMUX[6].bit.PMUXE = PORT_PMUX_PMUXE(0);
-   PORT->Group[0].PINCFG[6].reg |= PORT_PINCFG_PMUXEN;   //PMUX on
-
-   //Configre External Interrupts
-   EIC->CONFIG[1].reg |=   EIC_CONFIG_SENSE0_RISE; // |   // Trigger on Rising Edge
-   EIC->CONFIG[1].reg |=   EIC_CONFIG_SENSE1_RISE; // |   // Tigger on Rising Edge
-   EIC->CONFIG[0].reg |=   EIC_CONFIG_SENSE6_RISE; // |   // Trigger on Rising Edge
-
-   EIC->INTENSET.reg |=    EIC_INTENSET_EXTINT8 |     //Enable EXTINT8
-                           EIC_INTENSET_EXTINT9 |     //Enable EXTINT9
-                           EIC_INTENSET_EXTINT6;      //Enable EXTINT6
-
-*/
-
 
 
    pinMode(A2, INPUT_PULLDOWN);
@@ -158,7 +115,6 @@ void init_EIC()
    EIC->EVCTRL.reg |= EIC_EVCTRL_EXTINTEO9;           // Set Interrupt EXTINT09 for Event Generation
    EIC->EVCTRL.reg |= EIC_EVCTRL_EXTINTEO6;           // Set Interrupt EXTINT06 for Event Generation
 
-   
    EIC->CTRL.bit.ENABLE = enable;
    while(EICisSyncing);
 
@@ -168,6 +124,7 @@ void init_EIC()
 void init_EVSYS()
 {
    PM->APBCMASK.reg |= PM_APBCMASK_EVSYS;    //Enable in Power Manager
+
 
    //Route Event Users (Outputs)
    REG_EVSYS_USER =  EVSYS_USER_CHANNEL(EXTINT8_EVENT + 1) |                // Select Channel of EXTINT8, 
@@ -203,6 +160,7 @@ void init_TC()
    //Enable in Power Manager
    PM->APBCMASK.reg |= PM_APBCMASK_TC3 | PM_APBCMASK_TC4 | PM_APBCMASK_TC5; 
 
+
    //Enable Events on Counters
    TC3->COUNT16.EVCTRL.reg |= TC_EVCTRL_TCEI | TC_EVCTRL_EVACT_COUNT;      // Set up TC3 to count on event
    TC4->COUNT16.EVCTRL.reg |= TC_EVCTRL_TCEI | TC_EVCTRL_EVACT_COUNT;      // Set up TC4 to count on event              
@@ -224,26 +182,5 @@ void init_TC()
                               TC_CTRLA_RUNSTDBY |           // Set to run in standby
                               TC_CTRLA_ENABLE;              // Enable TC5
    while (TC5isSyncing); 
-
-}
-
-void init_TCC2()
-{
-   #define TCCisSyncing    TCC2->SYNCBUSY.bit.ENABLE
-
-   PM->APBCMASK.reg |= PM_APBCMASK_TCC2;
-   TCC2->CTRLA.bit.ENABLE = disable;
-
-   uint32_t period = sleepTime * 1000;
-   TCC2->PER.reg = period;                      // Set TOP value to sleepTime
-   TCC2->INTENSET.reg |= TCC_INTENSET_OVF;      // Enable Overflow interrupt on TOP
-
-   TCC2->CTRLA.reg = TCC_CTRLA_RUNSTDBY |
-                     TCC_CTRLA_ENABLE;
-   while(TCCisSyncing);
-
-   TCC2->CTRLBCLR.bit.DIR = TCC_CTRLBCLR_DIR;
-   TCC2->CTRLBSET.bit.CMD = TCC_CTRLBSET_CMD_RETRIGGER;
-
 
 }

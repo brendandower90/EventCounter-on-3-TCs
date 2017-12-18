@@ -14,22 +14,21 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   Lesser General Public License for more details.
 
+  A copy of this license is included in the .git directory
+
 */
 
 #include <Arduino.h>
 #include <RTCZero.h>
-//#include <clocks.h>
 
 //Function Declarations
+void init_EventCount(SodaqRTC rtc);
 void init_GCLK();
 void init_EIC();
 void init_TC();
 void init_EVSYS();
 void init_RTC(SodaqRTC rtc);
 void RTC_ISR();
-void printEpochTime(SodaqRTC rtc);
-void EIC_ISR();
-void init_TCC2();
 
 //Serial Macros
 #define  debug(x)       SerialUSB.print(x)
@@ -38,7 +37,6 @@ void init_TCC2();
 #define  tab            SerialUSB.print("\t")
 #define  nbsp           SerialUSB.print(" ")
 #define  flush          SerialUSB.flush();
-
 
 //Syncing Definitions
 #define  TC3isSyncing   TC3->COUNT16.STATUS.bit.SYNCBUSY
@@ -62,18 +60,9 @@ void init_TCC2();
 #define  disable  0
 
 //RTC Global Variables
-
-
-#define rtc_resetTime() rtc.setAlarmTime(0,0,0)  
-extern volatile uint32_t epochTime;
 extern const int sleepTime;
 extern volatile int nextAlarm;
 extern volatile bool RTCTriggered;;
-
-//Clocks
-#define CONF_CLOCK_OSC8M_ON_DEMAND = true;
-#define CONF_CLOCK_OSC8M_RUN_IN_STANDBY = true;
-
 
 
 #endif

@@ -32,18 +32,15 @@
 *
 * -------------------------------------------------------------------------------------- */
 
+#include "SetupFiles/TC_EventCount.h"
 
-#include "TC_EventCount.h"
 
-//Change these to adjust epoch time and sleep time
-volatile uint32_t epochTime = 1513548581;
+//Change this value to change the sleep Interval before next report
 const int sleepTime = 5;
-volatile int nextAlarm = sleepTime;
-volatile bool RTCTriggered = false;
-volatile uint32_t currentTime = epochTime;
 
 SodaqRTC rtc;
-
+volatile int nextAlarm = sleepTime;
+volatile bool RTCTriggered = false;
 
 
 //Start
@@ -58,19 +55,14 @@ void setup()
 
    //Allow 10 sec for Re-upload of sketch
    for( int i = 1; i <= 5; i++){
-   //   digitalWrite(LED_GREEN, LOW);   delay(1000);
-   //   digitalWrite(LED_GREEN, HIGH);    delay(1000);
+      digitalWrite(LED_GREEN, LOW);   delay(1000);
+      digitalWrite(LED_GREEN, HIGH);    delay(1000);
       SerialUSB.print(".");
    }
    SerialUSB.println("\n");
 
-   //Configure Peripherals
-   init_GCLK();                             
-   init_EIC();
-   init_EVSYS();
-   init_TC();
-//   init_TCC2();
-   init_RTC(rtc);
+   //Configure EventCounter
+   init_EventCount(rtc);
 
    //Set Sleep mode
    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
@@ -84,24 +76,24 @@ void loop() {
    //Check if RTC Alarm has been triggered
    if (RTCTriggered){
 
-         //Read TC3 Count
-         nbsp;
-         SerialUSB.print("Upper: ");
-         TC3->COUNT16.READREQ.reg = TC_READREQ_RREQ | TC_READREQ_ADDR(0x10);
-         SerialUSB.print(TC3->COUNT16.COUNT.reg); 
-         SerialUSB.print("\t");
+      //Read TC3 Count
+      nbsp;
+      SerialUSB.print("Upper: ");
+      TC3->COUNT16.READREQ.reg = TC_READREQ_RREQ | TC_READREQ_ADDR(0x10);
+      SerialUSB.print(TC3->COUNT16.COUNT.reg); 
+      SerialUSB.print("\t");
 
-         //Read TC4 Count
-         SerialUSB.print("Lower: ");
-         TC4->COUNT16.READREQ.reg = TC_READREQ_RREQ | TC_READREQ_ADDR(0x10);
-         SerialUSB.print(TC4->COUNT16.COUNT.reg);     
-         SerialUSB.print("\t");
+      //Read TC4 Count
+      SerialUSB.print("Lower: ");
+      TC4->COUNT16.READREQ.reg = TC_READREQ_RREQ | TC_READREQ_ADDR(0x10);
+      SerialUSB.print(TC4->COUNT16.COUNT.reg);     
+      SerialUSB.print("\t");
 
-         //Read TC5 Count
-         SerialUSB.print("Entry: ");
-         TC5->COUNT16.READREQ.reg = TC_READREQ_RREQ | TC_READREQ_ADDR(0x10);
-         SerialUSB.print(TC5->COUNT16.COUNT.reg); 
-         SerialUSB.println("\t");
+      //Read TC5 Count
+      SerialUSB.print("Entry: ");
+      TC5->COUNT16.READREQ.reg = TC_READREQ_RREQ | TC_READREQ_ADDR(0x10);
+      SerialUSB.print(TC5->COUNT16.COUNT.reg); 
+      SerialUSB.println("\t");
 
 
       //Reset Counters;
@@ -123,22 +115,13 @@ void loop() {
 
 }
 
-void EIC_ISR()
-{
-   digitalWrite(LED_GREEN, LOW);
 
-}
 void RTC_ISR()
 {
    RTCTriggered = true;
    
 }
 
-void TCC_Handler()
-{
-   RTCTriggered = true;
-   TCC2->INTFLAG.bit.OVF = disable;
-}
 
 
 
