@@ -1,0 +1,5 @@
+{
+   "terminal.integrated.env.linux": {
+      "PATH": "/home/brendan/.platformio/penv/bin:/home/brendan/bin:/home/brendan/.local/bin:/home/brendan/bin:/home/brendan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+   }
+}
