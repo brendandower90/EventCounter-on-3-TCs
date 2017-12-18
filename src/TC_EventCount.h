@@ -25,9 +25,9 @@ void init_GCLK();
 void init_EIC();
 void init_TC();
 void init_EVSYS();
-void init_RTC(SodaqRTC rtc);
+void init_RTC(RTCZero rtc);
 void RTC_ISR();
-void printEpochTime(SodaqRTC rtc);
+void printEpochTime(RTCZero rtc);
 void EIC_ISR();
 void init_TCC2();
 

@@ -42,7 +42,7 @@ volatile int nextAlarm = sleepTime;
 volatile bool RTCTriggered = false;
 volatile uint32_t currentTime = epochTime;
 
-SodaqRTC rtc;
+RTCZero rtc;
 
 
 
